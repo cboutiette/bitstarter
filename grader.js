@@ -47,7 +47,12 @@ var loadChecks = function(checksfile) {
 };
 
 var checkHtmlFile = function(htmlfile, checksfile) {
-    $ = cheerioHtmlFile(htmlfile);
+    if(program.url){
+	$ = cheerio.load(htmlfile);
+    }
+    else{
+	$ = cheerioHtmlFile(htmlfile);
+    }
     var checks = loadChecks(checksfile).sort();
     var out = {};
     for(var ii in checks) {
@@ -67,19 +72,16 @@ if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
-        .option('-u --url <url_link>', 'URL to html file', clone(assertFileExists), URL_DEFAULT)
+        .option('-u --url <url_link>', 'URL to html file', URL_DEFAULT)
 	.parse(process.argv);
-    if(program.file && program.url){
-	console.log('You cannot provide both a url and a file path -- Please only provide one');
-    }
-    else if(program.url){
+    if(program.url){
 	restler.get(program.url).on('complete', function(result) {
-	var checkJson = checkHtmlFile(result, program.checks);
-	var outJson = JSON.stringify(checkJson, null, 4);
-        console.log(outJson);
+	    var checkJson = checkHtmlFile(result, program.checks);
+	    var outJson = JSON.stringify(checkJson, null, 4);
+            console.log(outJson);
 	});
     }
-    else if(program.file){
+    else{
 	var checkJson = checkHtmlFile(program.file, program.checks);
 	var outJson = JSON.stringify(checkJson, null, 4);
 	console.log(outJson);
